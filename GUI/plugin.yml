@@ -1,0 +1,5 @@
+name: ParticleGUI
+main: com.net.lance.Main
+version: 1.0
+commands:
+ menu:

@@ -1,119 +1,85 @@
-package com.net.lance;
+package net.lance.com;
 
 import java.util.ArrayList;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.Material;
-import org.bukkit.Particle;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitRunnable;
 
 
 
-public class Main extends JavaPlugin implements Listener {
-	ArrayList<String> playerlist = new ArrayList<String>();
-	ArrayList<String> removelist = new ArrayList<String>();
-	@Override
+
+public class Main extends JavaPlugin implements Listener{
 	public void onEnable() {
-		getServer().getPluginManager().registerEvents(this, this);
-		
-		
+		this.getConfig().options().copyDefaults(true);
+	    saveConfig();
+	    reloadConfig();
+		System.out.println("[MoTyCraft] å·²é–‹å•Ÿ");
+		System.out.println("[MoTyCraft] ç›®å‰ç‰ˆæœ¬:" + this.getConfig());
+		Bukkit.getServer().getPluginManager().registerEvents(this, this);
 	}
-	@Override
 	public void onDisable() {
 		
 	}
-	 static ItemStack blaze = new ItemStack(Material.BLAZE_POWDER);
-	 static ItemStack water = new ItemStack(Material.WATER_BUCKET);
-	 static ItemStack clear = new ItemStack(Material.BUCKET);
-	 
-	public static Inventory particle = Bukkit.createInventory(null , 9 , ChatColor.BLACK + "²É¤l®ÄªG²M³æ");
-
-		         static {
-		   
-		        	 blaze.getItemMeta().setDisplayName(ChatColor.GOLD + "¯PµK");
-		        	 water.getItemMeta().setDisplayName(ChatColor.BLUE + "¤ôºw");
-		        	 clear.getItemMeta().setDisplayName(ChatColor.RED + "²M°£²É¤l®ÄªG");
-		        	 particle.setItem(0, blaze);
-		        	 particle.setItem(1, water);
-		        	 particle.setItem(8, clear);
-		        	 
-		        	 
-		         }
+	ArrayList<String> joinlist = new ArrayList<String>();
+	
 	@Override
 	public boolean onCommand(CommandSender sender,Command cmd,String lable,String args[]) {
 		Player player = (Player)sender;
-		if(cmd.getName().equalsIgnoreCase("menu")) {
-			player.openInventory(particle);
+		if(cmd.getName().equalsIgnoreCase("mtc") && player.hasPermission("mtc.usecommand")) {
+			String a = args[0];
+			
+			switch(a) {
+			case "help":{
+				player.sendMessage(ChatColor.YELLOW + "MoTy" + ChatColor.GOLD + "Craft" + ChatColor.YELLOW + "æŒ‡ä»¤åˆ—è¡¨:");
+				player.sendMessage(ChatColor.YELLOW + "/mtc help é¡¯ç¤ºæŒ‡ä»¤ã€‚");
+				player.sendMessage(ChatColor.YELLOW + "/mtc setmotd è¨­å®šç•¶ç©å®¶ç™»å…¥æ™‚çš„è¨Šæ¯ã€‚");
+				player.sendMessage(ChatColor.YELLOW + "/mtc version é¡¯ç¤ºç›®å‰ç‰ˆæœ¬ã€‚");
+				return true;
+			}
+			case "setmotd":{
+				if(args.length == 0) {
+			        player.sendMessage(ChatColor.RED + "è«‹è¨­å®šmotdæ–‡å­—!");
+			    }
+			        String motd = "";
+			        for(int i=0;i<args.length;i++) {
+			            motd += args[i] + " ";
+			        }
+			        getConfig().set("PlayerJoinMessenge" , motd);
+			        saveConfig();
+			        player.sendMessage(ChatColor.GREEN + "æˆåŠŸè¨­ç½®MOTD!");
+			        return true;
+			}		
+			case "":{
+				player.sendMessage(ChatColor.YELLOW + "MoTy" + ChatColor.GOLD + "Craft" + ChatColor.YELLOW + "æŒ‡ä»¤åˆ—è¡¨:");
+				player.sendMessage(ChatColor.YELLOW + "/mtc help é¡¯ç¤ºæŒ‡ä»¤ã€‚");
+				player.sendMessage(ChatColor.YELLOW + "/mtc setmotd è¨­å®šç•¶ç©å®¶ç™»å…¥æ™‚çš„è¨Šæ¯ã€‚");
+				player.sendMessage(ChatColor.YELLOW + "/mtc version é¡¯ç¤ºç›®å‰ç‰ˆæœ¬ã€‚");
+				return true;
+			}
+			}
+			} else {
+			player.sendMessage(ChatColor.RED + "ä½ æ²’æœ‰æ¬Šé™!");
 		}
 		return true;
 	}
 	
 	@EventHandler
-	public void onInventoryClick(InventoryClickEvent event) {
-		Player player = (Player) event.getWhoClicked();
-	    Inventory inventory = event.getInventory();
-	    if(inventory.getName().equals(particle.getName())){
-	        
-	            event.setCancelled(true);
-	            if(event.getCurrentItem().equals(blaze)){
-	            	if (!(playerlist.contains(player.getName()))) {
-	            		player.closeInventory();
-	            		playerlist.add(player.getName());
-	            		
-	            	
-	            		new BukkitRunnable(){
-	            		
-						@Override
-	                    public void run() {
-							
-							player.getWorld().spawnParticle(Particle.LAVA, player.getLocation(), 50);
-							if (removelist.contains(player.getName())) cancel();
-	                    }
-	                }.runTaskTimer(this, 20, 10);
-	            	} else {
-	            		event.setCancelled(true);
-	            		player.sendMessage(ChatColor.RED + "§A¤w¾Ö¦³¥t¤@­Ó²É¤l¯S®Ä¤F¡A­Y­n§ó´«½Ğ¥ı²M°£²É¤l®ÄªG¡C");
-	            	}
-	                if(event.getCurrentItem().equals(clear)){
-	                	player.closeInventory();
-	                	player.sendMessage(ChatColor.RED + "¤w²M°£²É¤l®ÄªG!");
-	                	removelist.add(player.getName());
-	                }
-	            	}
-	            	if(event.getCurrentItem().equals(water)) {
-	            		player.closeInventory();
-						if (!(playerlist.contains(player.getName()))) {
-							playerlist.add(player.getName());
-							
-	            		new BukkitRunnable(){
-	            			
-							@Override
-		                    public void run() {
-								
-								player.getWorld().spawnParticle(Particle.DRIP_WATER, player.getLocation(), 100);
-								if (removelist.contains(player.getName())) cancel();
-								
-		                    }
-		                }.runTaskTimer(this, 20, 10);
-	            		} else {
-	            			event.setCancelled(true);
-	            			player.sendMessage(ChatColor.RED + "§A¤w¾Ö¦³¥t¤@­Ó²É¤l¯S®Ä¤F¡A­Y­n§ó´«½Ğ¥ı²M°£²É¤l®ÄªG¡C");
-	            		}
-	            		}
-	    }
+	public void onPlayerJoin(PlayerJoinEvent event) {
+		Player player = event.getPlayer();
+		joinlist.add(player.getName());
 	}
 	
+	@EventHandler
+	public void onPlayerMove(PlayerMoveEvent event) {
+		
+	}
 }
-
-
 

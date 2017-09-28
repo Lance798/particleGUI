@@ -1,85 +1,123 @@
-package net.lance.com;
+package com.net.lance;
 
 import java.util.ArrayList;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
+import org.bukkit.Particle;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 
 
 
-
-public class Main extends JavaPlugin implements Listener{
+public class Main extends JavaPlugin implements Listener {
+	ArrayList<String> playerlist = new ArrayList<String>();
+	
+	@Override
 	public void onEnable() {
-		this.getConfig().options().copyDefaults(true);
-	    saveConfig();
-	    reloadConfig();
-		System.out.println("[MoTyCraft] 已開啟");
-		System.out.println("[MoTyCraft] 目前版本:" + this.getConfig());
-		Bukkit.getServer().getPluginManager().registerEvents(this, this);
+		getServer().getPluginManager().registerEvents(this, this);
+		
+		
 	}
+	@Override
 	public void onDisable() {
 		
 	}
-	ArrayList<String> joinlist = new ArrayList<String>();
-	
+	 static ItemStack blaze = new ItemStack(Material.BLAZE_POWDER);
+	 static ItemStack water = new ItemStack(Material.WATER_BUCKET);
+	 static ItemStack clear = new ItemStack(Material.BUCKET);
+	 
+	public static Inventory particle = Bukkit.createInventory(null , 9 , ChatColor.BLACK + "粒子效果清單");
+
+		         static {
+		   
+		        	 blaze.getItemMeta().setDisplayName(ChatColor.GOLD + "烈焰");
+		        	 water.getItemMeta().setDisplayName(ChatColor.BLUE + "水滴");
+		        	 clear.getItemMeta().setDisplayName(ChatColor.RED + "清除粒子效果");
+		        	 particle.setItem(0, blaze);
+		        	 particle.setItem(1, water);
+		        	 particle.setItem(8, clear);
+		        	 
+		        	 
+		         }
 	@Override
 	public boolean onCommand(CommandSender sender,Command cmd,String lable,String args[]) {
 		Player player = (Player)sender;
-		if(cmd.getName().equalsIgnoreCase("mtc") && player.hasPermission("mtc.usecommand")) {
-			String a = args[0];
-			
-			switch(a) {
-			case "help":{
-				player.sendMessage(ChatColor.YELLOW + "MoTy" + ChatColor.GOLD + "Craft" + ChatColor.YELLOW + "指令列表:");
-				player.sendMessage(ChatColor.YELLOW + "/mtc help 顯示指令。");
-				player.sendMessage(ChatColor.YELLOW + "/mtc setmotd 設定當玩家登入時的訊息。");
-				player.sendMessage(ChatColor.YELLOW + "/mtc version 顯示目前版本。");
-				return true;
-			}
-			case "setmotd":{
-				if(args.length == 0) {
-			        player.sendMessage(ChatColor.RED + "請設定motd文字!");
-			    }
-			        String motd = "";
-			        for(int i=0;i<args.length;i++) {
-			            motd += args[i] + " ";
-			        }
-			        getConfig().set("PlayerJoinMessenge" , motd);
-			        saveConfig();
-			        player.sendMessage(ChatColor.GREEN + "成功設置MOTD!");
-			        return true;
-			}		
-			case "":{
-				player.sendMessage(ChatColor.YELLOW + "MoTy" + ChatColor.GOLD + "Craft" + ChatColor.YELLOW + "指令列表:");
-				player.sendMessage(ChatColor.YELLOW + "/mtc help 顯示指令。");
-				player.sendMessage(ChatColor.YELLOW + "/mtc setmotd 設定當玩家登入時的訊息。");
-				player.sendMessage(ChatColor.YELLOW + "/mtc version 顯示目前版本。");
-				return true;
-			}
-			}
-			} else {
-			player.sendMessage(ChatColor.RED + "你沒有權限!");
+		if(cmd.getName().equalsIgnoreCase("menu")) {
+			player.openInventory(particle);
 		}
 		return true;
 	}
 	
 	@EventHandler
-	public void onPlayerJoin(PlayerJoinEvent event) {
-		Player player = event.getPlayer();
-		joinlist.add(player.getName());
+	public void onInventoryClick(InventoryClickEvent event) {
+		Player player = (Player) event.getWhoClicked();
+	    Inventory inventory = event.getInventory();
+	    if(inventory.getName().equals(particle.getName())){
+	        
+	            event.setCancelled(true);
+	            if(event.getCurrentItem().equals(blaze)){
+	            	if (!(playerlist.contains(player.getName()))) {
+	            		player.closeInventory();
+	            		playerlist.add(player.getName());
+	            		
+	            	
+	            		new BukkitRunnable(){
+	            		
+						@Override
+	                    public void run() {
+							
+							player.getWorld().spawnParticle(Particle.LAVA, player.getLocation(), 50);
+							if (!(playerlist.contains(player.getName()))) {
+								cancel();
+							}
+	                    }
+	                }.runTaskTimer(this, 20, 10);
+	            	} else {
+	            		event.setCancelled(true);
+	            		player.sendMessage(ChatColor.RED + "你已擁有另一個粒子特效了，若要更換請先清除粒子效果。");
+	            	}
+	                if(event.getCurrentItem().equals(clear)){
+	                	player.closeInventory();
+	                	player.sendMessage(ChatColor.RED + "已清除粒子效果!");
+	                	playerlist.remove(player.getName());
+	                }
+	            	}
+	            	if(event.getCurrentItem().equals(water)) {
+	            		player.closeInventory();
+						if (!(playerlist.contains(player.getName()))) {
+							playerlist.add(player.getName());
+							
+	            		new BukkitRunnable(){
+	            			
+							@Override
+		                    public void run() {
+								
+								player.getWorld().spawnParticle(Particle.DRIP_WATER, player.getLocation(), 100);
+								if (!(playerlist.contains(player.getName()))) {
+									cancel();
+								}
+								
+		                    }
+		                }.runTaskTimer(this, 20, 10);
+	            		} else {
+	            			event.setCancelled(true);
+	            			player.sendMessage(ChatColor.RED + "你已擁有另一個粒子特效了，若要更換請先清除粒子效果。");
+	            		}
+	            		}
+	    }
 	}
 	
-	@EventHandler
-	public void onPlayerMove(PlayerMoveEvent event) {
-		
-	}
 }
+
+
 
